@@ -498,12 +498,13 @@
         </div>`;
       }
 
+      const isKapotRound = r.special === 'kapot' || (r.events || []).some(e => e.type === 'kapot');
       return `<div class="history-round">
         <div class="row"><strong>Runda ${realIndex + 1}</strong><span class="muted tiny">${formatDate(r.createdAt)}</span></div>
-        <div class="history-grid">${game.playerIds.map(pid => `<span>${esc(pName(pid))}</span><strong>${Number(r.scores?.[pid] ?? 0)}</strong>`).join('')}</div>
+        ${isKapotRound ? '' : `<div class="history-grid">${game.playerIds.map(pid => `<span>${esc(pName(pid))}</span><strong>${Number(r.scores?.[pid] ?? 0)}</strong>`).join('')}</div>`}
         ${(r.events || []).map(e => `<div class="history-event">${esc(e.label)} · ${e.points > 0 ? '+' : ''}${e.points}${e.playerId ? ` · ${esc(pName(e.playerId))}` : ''}</div>`).join('')}
         <div class="action-row" style="margin-top:10px">
-          <button class="btn" data-edit-round="${r.id}">Uredi</button>
+          ${isKapotRound ? '' : `<button class="btn" data-edit-round="${r.id}">Uredi</button>`}
           <button class="btn danger" data-delete-round="${r.id}">Obriši</button>
         </div>
       </div>`;
@@ -674,12 +675,45 @@
 
     openModal(`
       <h2>Kapot</h2>
-      <p>Odaberi igrača.</p>
+      <p>Odaberi igrača. Odabirom se runda odmah završava, svi uneseni bodovi te runde se odbacuju, a tom igraču se oduzima 11 bodova.</p>
       <div class="option-list">
         ${game.playerIds.map(pid => `<button class="option" data-kapot-player="${pid}">${esc(pName(pid))}<strong style="float:right">-11</strong></button>`).join('')}
       </div>
       <button class="btn ghost full" data-modal-close="1" style="margin-top:10px">Odustani</button>
     `);
+  }
+
+  function saveKapotRound(playerId) {
+    const game = getActive();
+    if (!game || game.type !== 'kifameno') return;
+    if (!game.playerIds.includes(playerId)) return;
+
+    // Kapot JE cijela runda. Sve što je eventualno bilo uneseno u trenutni
+    // draft se odbacuje: u istoj rundi ne mogu postojati Kapot i obični bodovi.
+    const kapotRound = {
+      id: uid(),
+      createdAt: nowIso(),
+      scores: {},
+      events: [{
+        id: uid(),
+        createdAt: nowIso(),
+        type: 'kapot',
+        playerId,
+        points: RULES.kifameno.kapot,
+        label: 'Kapot'
+      }],
+      special: 'kapot'
+    };
+
+    game.rounds.push(kapotRound);
+
+    // Odmah otvaramo potpuno novu praznu rundu.
+    game.draft = { scores: {}, autoAssignedId: null, events: [], winnerId: null };
+    setActive(game);
+    haptic(60);
+    renderGame();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    toast(`${pName(playerId)} -11 · nova runda`);
   }
 
   function editRound(roundId) {
@@ -961,7 +995,7 @@
     if (kapotP) {
       const pid = kapotP.dataset.kapotPlayer;
       closeModal();
-      addDraftEvent({ type: 'kapot', playerId: pid, points: RULES.kifameno.kapot, label: 'Kapot' });
+      saveKapotRound(pid);
       return;
     }
 
