@@ -1,0 +1,16 @@
+{
+  "name": "Karte Score",
+  "short_name": "Karte",
+  "description": "Praćenje bodova za Briškulu, Trešetu i Kifameno.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b0e13",
+  "theme_color": "#0b0e13",
+  "lang": "hr",
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
