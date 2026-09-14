@@ -1,4 +1,4 @@
-const CACHE = 'karte-score-runtime-v4';
+const CACHE = 'karte-score-runtime-v5';
 const APP_SHELL = [
   './',
   './index.html',

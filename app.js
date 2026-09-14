@@ -352,13 +352,21 @@
     const otherSum = Object.entries(d.scores)
       .filter(([id]) => id !== playerId && id !== d.autoAssignedId)
       .reduce((sum, [, value]) => sum + Number(value || 0), 0);
-    return Math.max(0, base - otherSum);
+    const remaining = Math.max(0, base - otherSum);
+
+    // U normalnoj rundi Kifamena pojedini igrač može imati najviše 10.
+    // 11 znači Kapot i vodi se isključivo preko posebne Kapot akcije.
+    return game.type === 'kifameno' ? Math.min(10, remaining) : remaining;
   }
 
   function setDraftScore(playerId, value) {
     const game = getActive();
     if (!game) return;
     const d = ensureDraft(game);
+
+    if (game.type === 'kifameno' && Number(value) > 10) {
+      return toast('U Kifamenu 11 znači Kapot.');
+    }
 
     if (d.autoAssignedId === playerId) {
       return toast('Ovaj rezultat je izračunat automatski.');
@@ -374,8 +382,13 @@
     const unset = game.playerIds.filter(id => !Object.prototype.hasOwnProperty.call(d.scores, id));
     if (unset.length === 1) {
       const remain = RULES[game.type].basePoints - draftBaseSum(game);
-      d.scores[unset[0]] = Math.max(0, remain);
-      d.autoAssignedId = unset[0];
+
+      // Zadnjeg igrača automatski popuni samo ako je rezultat dozvoljen.
+      // U Kifamenu 11 nije normalan rezultat runde nego Kapot.
+      if (!(game.type === 'kifameno' && remain > 10)) {
+        d.scores[unset[0]] = Math.max(0, remain);
+        d.autoAssignedId = unset[0];
+      }
     }
 
     setActive(game);
@@ -524,9 +537,10 @@
     const remain = remainingPoints(game);
 
     const allSet = game.playerIds.every(id => Object.prototype.hasOwnProperty.call(d.scores, id));
+    const kifamenoScoresValid = game.type !== 'kifameno' || game.playerIds.every(id => Number(d.scores[id]) <= 10);
     const validRound = isBriskula
       ? Boolean(d.winnerId)
-      : allSet && draftBaseSum(game) === rule.basePoints;
+      : allSet && draftBaseSum(game) === rule.basePoints && kifamenoScoresValid;
 
     app.innerHTML = shell(`
       ${topbar(rule.label, `Runda ${(game.rounds?.length || 0) + 1}`, 'home')}
@@ -582,8 +596,10 @@
       });
     } else {
       const rule = RULES[game.type];
-      const valid = game.playerIds.every(id => Object.prototype.hasOwnProperty.call(d.scores, id)) && draftBaseSum(game) === rule.basePoints;
-      if (!valid) return toast('Runda nije ispravno popunjena.');
+      const allSet = game.playerIds.every(id => Object.prototype.hasOwnProperty.call(d.scores, id));
+      const kifamenoScoresValid = game.type !== 'kifameno' || game.playerIds.every(id => Number(d.scores[id]) <= 10);
+      const valid = allSet && draftBaseSum(game) === rule.basePoints && kifamenoScoresValid;
+      if (!valid) return toast(game.type === 'kifameno' ? 'Rasporedi 11 bodova tako da nitko nema više od 10. Za 11 koristi Kapot.' : 'Runda nije ispravno popunjena.');
       game.rounds.push({
         id: uid(),
         createdAt: nowIso(),
