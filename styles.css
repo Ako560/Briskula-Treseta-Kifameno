@@ -883,6 +883,86 @@ label.field { display: flex; flex-direction: column; gap: 7px; color: var(--mute
   border-color: rgba(126,91,47,.16);
 }
 
+
+.light .game-card {
+  color: var(--text);
+  border-color: rgba(126,91,47,.18);
+  box-shadow: inset 0 1px rgba(255,255,255,.55), 0 12px 26px rgba(70,43,17,.08);
+}
+.light .game-card::before {
+  background:
+    linear-gradient(120deg, rgba(255,255,255,.24), transparent 35% 70%, rgba(126,91,47,.05)),
+    radial-gradient(circle at 18% 20%, rgba(255,255,255,.22), transparent 20%);
+}
+.light .game-card::after { border-color: rgba(126,91,47,.10); }
+.light .game-card strong { color: #2f281f; text-shadow: none; }
+.light .game-card-note { color: #746a5c; }
+.light .game-card-treseta {
+  background: radial-gradient(circle at 88% 14%, rgba(255,255,255,.28), transparent 24%), linear-gradient(145deg, #dfeee5, #b7d6c5 78%);
+}
+.light .game-card-kifameno {
+  background: radial-gradient(circle at 88% 14%, rgba(255,255,255,.28), transparent 24%), linear-gradient(145deg, #efe2cb, #d7bd96 78%);
+}
+.light .game-card-briskula {
+  background: radial-gradient(circle at 88% 14%, rgba(255,255,255,.28), transparent 24%), linear-gradient(145deg, #eed8d3, #cba39b 78%);
+}
+.light .game-card-remi {
+  background: radial-gradient(circle at 88% 14%, rgba(255,255,255,.28), transparent 24%), linear-gradient(145deg, #dce9f7, #b6cde8 78%);
+}
+.light .game-card-arrow {
+  background: rgba(255,249,239,.82);
+  color: #6e4b22;
+  border-color: rgba(126,91,47,.26);
+}
+.light .game-motif::before {
+  opacity: .2;
+  background:
+    radial-gradient(circle at 70% 28%, rgba(126,91,47,.08), transparent 20%),
+    linear-gradient(160deg, rgba(255,255,255,.25), transparent 45%),
+    repeating-linear-gradient(0deg, rgba(126,91,47,.05) 0 1px, transparent 1px 13px),
+    repeating-linear-gradient(90deg, rgba(126,91,47,.04) 0 1px, transparent 1px 13px);
+}
+.light .game-motif::after { border-color: rgba(126,91,47,.12); }
+.light .motif-main,
+.light .motif-second,
+.light .motif-third { color: rgba(110,75,34,.45); }
+.light .player-chip {
+  background: linear-gradient(180deg, #fffaf2, #f3eadc);
+  color: #2f281f;
+  border-color: rgba(126,91,47,.22);
+  box-shadow: inset 0 1px rgba(255,255,255,.7), 0 3px 10px rgba(65,45,20,.04);
+}
+.light .player-chip.selected {
+  border-color: rgba(167,120,57,.50);
+  background: linear-gradient(180deg, #d8b06f, #bb8746);
+  color: #24170a;
+  box-shadow: inset 0 1px rgba(255,255,255,.35), 0 8px 18px rgba(143,97,42,.12);
+}
+.light .mode-card,
+.light .winner-btn {
+  background: linear-gradient(180deg, rgba(253,249,242,.98), rgba(245,238,227,.98));
+}
+.light .mode-card.selected,
+.light .winner-btn.selected {
+  border-color: rgba(167,120,57,.42);
+  background: linear-gradient(180deg, rgba(215,178,114,.88), rgba(185,135,70,.95));
+  color: #24170a;
+}
+.light .setup-placeholder {
+  background: rgba(255,250,241,.86);
+  border-color: rgba(126,91,47,.16);
+}
+.light .btn:disabled {
+  opacity: 1;
+  color: #8a8070;
+  border-color: rgba(126,91,47,.12);
+  background: linear-gradient(180deg, #eadfc7, #dccaa7);
+}
+.light .active-game-panel {
+  border-color: rgba(126,91,47,.18);
+  box-shadow: 0 14px 30px rgba(73,49,22,.11);
+}
+
 @media (max-width: 370px) {
   .app-shell { padding-inline: 12px; }
   .game-grid { grid-template-columns: 1fr; }
