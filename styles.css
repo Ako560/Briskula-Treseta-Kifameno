@@ -259,14 +259,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .game-card-briskula { --card-tint: #311816; }
 .game-card-remi { --card-tint: #162334; }
 .game-card-kifameno { --card-tint: #302315; }
-.game-card-copy { position: relative; z-index: 3; display: grid; gap: 5px; max-width: 62%; }
-.game-card-rule {
-  color: var(--gold-soft);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-}
+.game-card-copy { position: relative; z-index: 3; display: grid; gap: 7px; max-width: 62%; align-content: center; min-height: 112px; }
 .game-card strong {
   font-family: var(--serif);
   font-size: clamp(22px, 6vw, 30px);

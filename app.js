@@ -226,12 +226,12 @@
 
   function gameMeta(key) {
     const meta = {
-      treseta: { rule: '11 poena', note: 'Pojedinačno · 2 na 2' },
-      briskula: { rule: 'Pobjednik runde', note: '2, 3 ili 4 igrača' },
-      remi: { rule: '−2, −1, 1–20', note: '2 do 6 igrača' },
-      kifameno: { rule: 'Kapot −11', note: '0 do 10 po rundi' }
+      treseta: { note: '2, 3 ili 4 igrača' },
+      briskula: { note: '2, 3 ili 4 igrača' },
+      remi: { note: '2 do 6 igrača' },
+      kifameno: { note: '2, 3 ili 4 igrača' }
     };
-    return meta[key] || { rule: '', note: '' };
+    return meta[key] || { note: '' };
   }
 
   function gameVisual(key) {
@@ -327,7 +327,7 @@
       </button>` : ''}
 
       <div class="home-section-head">
-        <div class="section-title">Nova partija</div>
+        <div class="section-title">Nova runda</div>
       </div>
       <div class="game-grid premium-game-grid">
         ${Object.entries(RULES).map(([key, r]) => {
@@ -335,7 +335,6 @@
           return `
           <button class="game-card game-card-${key}" data-start-game="${key}" aria-label="Pokreni ${esc(r.label)}">
             <div class="game-card-copy">
-              <span class="game-card-rule">${esc(meta.rule)}</span>
               <strong>${r.label}</strong>
               <span class="game-card-note">${esc(meta.note)}</span>
             </div>
@@ -346,7 +345,7 @@
       </div>
 
       <div class="home-section-head">
-        <div class="section-title">Moja družina</div>
+        <div class="section-title">Moja ekipa</div>
         <button class="text-link" data-nav="players">Uredi ${uiIcon('chevron')}</button>
       </div>
       <button class="crew-card" data-nav="players">
