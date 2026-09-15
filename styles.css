@@ -773,33 +773,64 @@ label.field { display: flex; flex-direction: column; gap: 7px; color: var(--mute
 .light {
   --bg: #ede6d8;
   --bg-2: #e6ddcc;
-  --surface: rgba(252,248,239,.94);
-  --surface-2: rgba(244,237,225,.96);
-  --surface-3: rgba(235,226,210,.98);
-  --text: #2d271e;
-  --muted: #7d7465;
-  --muted-2: #9a907f;
-  --line: rgba(126,91,47,.2);
-  --line-strong: rgba(126,91,47,.42);
-  --gold: #9c7138;
-  --gold-soft: #8b6739;
-  --gold-bright: #6f4f28;
-  --accent: #b0844c;
-  --accent-strong: #8e6536;
+  --surface: rgba(252,248,239,.96);
+  --surface-2: rgba(247,240,228,.97);
+  --surface-3: rgba(238,229,214,.98);
+  --text: #2f281f;
+  --muted: #746a5c;
+  --muted-2: #918674;
+  --line: rgba(126,91,47,.18);
+  --line-strong: rgba(126,91,47,.34);
+  --gold: #9b723d;
+  --gold-soft: #876235;
+  --gold-bright: #6e4b22;
+  --accent: #b6884d;
+  --accent-strong: #8f6637;
   --accent-ink: #fff9ef;
+  --danger: #b24c46;
+  --success: #2d7250;
 }
 .light body {
   color-scheme: light;
   background:
-    radial-gradient(circle at 18% -8%, rgba(150,102,38,.1), transparent 23rem),
-    linear-gradient(180deg, #efe8dc, #e4dccd);
+    radial-gradient(circle at 18% -8%, rgba(150,102,38,.08), transparent 23rem),
+    linear-gradient(180deg, #efe8dc, #e5ddd0 48%, #e1d9cb 100%);
 }
-.light body::before { opacity: .07; }
-.light .input, .light .score-btn { background: rgba(255,252,246,.85); }
-.light .modal { background: #f9f3e8; }
-.light .bottom-nav { background: rgba(244,237,225,.92); }
-.light .game-card { color: #fff8ea; }
-.light .game-card strong { color: #ffe7b7; }
+.light body::before { opacity: .05; }
+.light .input,
+.light .score-btn,
+.light .score-input,
+.light select {
+  background: rgba(255,252,246,.92);
+  color: var(--text);
+  border-color: rgba(126,91,47,.18);
+}
+.light .input::placeholder,
+.light .score-input::placeholder { color: #9a907f; }
+.light .modal {
+  background: #f9f3e8;
+  border: 1px solid rgba(126,91,47,.16);
+  box-shadow: 0 26px 60px rgba(68,44,17,.18);
+}
+.light .bottom-nav {
+  background: rgba(248,242,232,.96);
+  border-color: rgba(126,91,47,.12);
+  box-shadow: 0 18px 40px rgba(73,49,22,.14);
+}
+.light .nav-btn { color: #7d7465; }
+.light .nav-btn.active {
+  color: var(--gold-bright);
+  background: rgba(182,136,77,.12);
+}
+.light .icon-btn {
+  background: rgba(255,251,243,.92);
+  color: var(--gold-bright);
+  border-color: rgba(126,91,47,.14);
+}
+.light .top-settings {
+  background: rgba(255,251,243,.6) !important;
+  border-color: rgba(126,91,47,.08) !important;
+}
 .light .crew-card,
 .light .recent-games-card,
 .light .card,
@@ -807,9 +838,57 @@ label.field { display: flex; flex-direction: column; gap: 7px; color: var(--mute
 .light .score-player,
 .light .winner-btn,
 .light .history-round,
-.light .mode-card { color: var(--text); background: rgba(250,246,237,.94); }
-.light .recent-game-title { color: var(--text); }
+.light .mode-card {
+  color: var(--text);
+  background: linear-gradient(180deg, rgba(253,249,242,.98), rgba(245,238,227,.98));
+  border-color: rgba(126,91,47,.16);
+  box-shadow: 0 8px 22px rgba(65,45,20,.06);
+}
+.light .recent-game-title,
+.light .brand,
+.light .crew-copy strong { color: var(--text); }
+.light .recent-game-meta,
+.light .stats-right,
+.light .muted,
+.light .game-card-note { color: var(--muted); }
 .light .mini-avatar { border-color: #eee4d2; }
+.light .btn {
+  background: linear-gradient(180deg, #f2ebde, #e5dccd);
+  color: var(--text);
+  border-color: rgba(126,91,47,.16);
+  box-shadow: inset 0 1px rgba(255,255,255,.55);
+}
+.light .btn.primary {
+  border-color: rgba(167,120,57,.34);
+  background: linear-gradient(180deg, #d6b06c, #b58345);
+  color: #24170a;
+  box-shadow: inset 0 1px rgba(255,255,255,.35), 0 8px 20px rgba(143,97,42,.16);
+}
+.light .btn.primary:active:not(:disabled) { background: linear-gradient(180deg, #dfbb79, #be8f54); }
+.light .btn.danger {
+  border-color: rgba(178,76,70,.18);
+  background: linear-gradient(180deg, rgba(210,138,130,.18), rgba(191,112,104,.2));
+  color: #a84a45;
+}
+.light .btn.ghost { background: transparent; color: var(--gold-soft); }
+.light .switch span { background: #dacfbf; }
+.light .switch span::after { background: #fff8ec; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+.light .switch input:checked + span { background: #b58648; }
+.light .switch input:checked + span::after { background: #24170a; }
+.light .game-card {
+  color: #fff8ea;
+  box-shadow: inset 0 1px rgba(255,255,255,.03), 0 14px 28px rgba(70,43,17,.11);
+}
+.light .game-card strong { color: #ffe7b7; }
+.light .active-game-panel {
+  background: linear-gradient(135deg, rgba(181,136,77,.18), rgba(255,250,242,.96) 60%);
+  color: var(--text);
+}
+.light .active-game-round { color: var(--muted); }
+.light .empty {
+  background: rgba(255,250,241,.75);
+  border-color: rgba(126,91,47,.16);
+}
 
 @media (max-width: 370px) {
   .app-shell { padding-inline: 12px; }
