@@ -1,20 +1,20 @@
-# Karte Score
+# Karte Score v8
 
-Jednostavna PWA aplikacija za praćenje Briškule, Trešete i Kifamena.
+Mobilna PWA aplikacija za praćenje rezultata u Trešeti, Briškuli, Kifamenu i Remiju.
 
-## Trenutna pravila aplikacije
+## Što je novo u v8
 
-- Briškula: 2, 3 ili 4 igrača. U svakoj rundi bira se samo pobjednik. Kod 4 igrača moguće je uključiti 2 na 2.
-- Trešeta: 11 osnovnih bodova po rundi. Preostali bodovi se automatski ograničavaju i zadnjem igraču se ostatak dodjeljuje automatski.
-- Kifameno: 11 osnovnih bodova po rundi, manji konačni rezultat je bolji, Kapot je -11.
-- Zvanja: nema unaprijed zadanog popisa. Odabere se igrač, po želji upiše naziv zvanja i odabere broj bodova.
+- Trešeta i Briškula imaju jasan izbor `Pojedinačno` ili `2 na 2`.
+- Kod `2 na 2` više se ne biraju četiri igrača. Upišu se samo dva imena timova.
+- Trešeta 2 na 2 vodi svih 11 bodova direktno po timu.
+- Zvanja i ručni bodovi u timskoj Trešeti dodjeljuju se direktno timu.
+- Briškula 2 na 2 po rundi traži samo pobjednički tim.
+- Pojedinačne partije i dalje koriste spremljene igrače.
+- Redizajniran je UI u jednostavniji i ozbiljniji stil, bez emojija i nepotrebnih opisa.
+- Postojeće lokalno spremljene partije i povijest ostaju kompatibilne.
 
-## GitHub Pages
+## GitHub Pages update
 
-Repozitorij može biti objavljen direktno iz `main` branch-a i `/ (root)` foldera.
+Zamijeni datoteke u repozitoriju i napravi commit. Service Worker koristi cache `v8`, pa se postojeća Home Screen instalacija ne mora ponovno dodavati.
 
-Settings -> Pages -> Deploy from a branch -> main -> /(root)
-
-## PWA i update
-
-Nakon što se aplikacija jednom doda na Home Screen, nije je potrebno ponovno instalirati nakon izmjena. Service worker provjerava noviju verziju s GitHub Pagesa, a lokalni podaci ostaju spremljeni u localStorageu na tom uređaju.
+Preporuka nakon deploya: potpuno zatvori aplikaciju i ponovno je otvori jednom kako bi nova verzija odmah sjela.

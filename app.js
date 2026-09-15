@@ -9,10 +9,14 @@
   };
 
   const RULES = {
-    treseta: { label: 'Trešeta', basePoints: 11, lowWins: false, declarations: true, teams: true },
+    treseta: { label: 'Trešeta', basePoints: 11, lowWins: false, declarations: true, teams: true, minPlayers: 2, maxPlayers: 4 },
     kifameno: { label: 'Kifameno', basePoints: 11, lowWins: true, declarations: true, teams: false, kapot: -11 },
-    briskula: { label: 'Briškula', basePoints: null, lowWins: false, declarations: false, teams: true, winnerPerRound: true }
+    briskula: { label: 'Briškula', basePoints: null, lowWins: false, declarations: false, teams: true, winnerPerRound: true, minPlayers: 2, maxPlayers: 4 },
+    remi: { label: 'Remi', basePoints: null, lowWins: true, declarations: false, teams: false, manualRound: true, minPlayers: 2, maxPlayers: 6 }
   };
+
+  const REMI_SCORES = [-2, -1, ...Array.from({ length: 20 }, (_, i) => i + 1)];
+  const isAllowedRemiScore = (value) => REMI_SCORES.includes(Number(value));
 
   const defaults = {
     settings: { theme: 'dark', haptics: true, confirmations: true }
@@ -21,8 +25,8 @@
   let page = 'home';
   let setupGame = null;
   let setupSelectedPlayers = [];
-  let setupTeamMode = false;
-  let setupTeamA = [];
+  let setupPlayMode = null;
+  let setupTeamNames = { a: '', b: '' };
   let modalAfterClose = null;
 
   const app = document.getElementById('app');
@@ -82,12 +86,24 @@
   function pName(id) { return playerById(id)?.name || 'Igrač'; }
 
   function getTeamForPlayer(game, playerId) {
-    return (game.teams || []).find(t => t.playerIds.includes(playerId));
+    return (game.teams || []).find(t => (t.playerIds || []).includes(playerId));
   }
 
   function participantName(game, id) {
     if (game.teamMode) return game.teams?.find(t => t.id === id)?.name || 'Tim';
     return pName(id);
+  }
+
+  function scoreParticipantIds(game) {
+    return game.teamOnly ? (game.teams || []).map(t => t.id) : (game.playerIds || []);
+  }
+
+  function scoreParticipantName(game, id) {
+    return game.teamOnly ? participantName(game, id) : pName(id);
+  }
+
+  function scoreParticipantTotal(game, id) {
+    return game.teamOnly ? teamTotal(game, id) : playerTotal(game, id);
   }
 
   function briskulaParticipants(game) {
@@ -120,7 +136,17 @@
   function teamTotal(game, teamId) {
     const team = (game.teams || []).find(t => t.id === teamId);
     if (!team) return 0;
-    let total = team.playerIds.reduce((sum, pid) => sum + playerTotal(game, pid), 0);
+
+    if (game.teamOnly) {
+      let total = 0;
+      for (const round of game.rounds || []) total += Number(round.scores?.[teamId] ?? 0);
+      for (const e of allEvents(game)) {
+        if (e.teamId === teamId) total += Number(e.points || 0);
+      }
+      return total;
+    }
+
+    let total = (team.playerIds || []).reduce((sum, pid) => sum + playerTotal(game, pid), 0);
     for (const e of allEvents(game)) {
       if (e.teamId === teamId && !e.playerId) total += Number(e.points || 0);
     }
@@ -200,7 +226,10 @@
     return `<div class="topbar">
       <div class="row" style="justify-content:flex-start">
         ${back ? `<button class="icon-btn" data-nav="${esc(back)}" aria-label="Natrag">←</button>` : ''}
-        <div class="brand">${esc(title)}${meta ? `<small>${esc(meta)}</small>` : ''}</div>
+        <div class="brand-lockup">
+          ${!back ? `<span class="brand-mark" aria-hidden="true"><i></i><i></i></span>` : ''}
+          <div class="brand">${esc(title)}${meta ? `<small>${esc(meta)}</small>` : ''}</div>
+        </div>
       </div>
       ${getActive() && page !== 'game' ? `<button class="btn compact" data-nav="game">Partija</button>` : ''}
     </div>`;
@@ -220,12 +249,13 @@
         ${Object.entries(RULES).map(([key, r]) => `
           <button class="game-card" data-start-game="${key}">
             <strong>${r.label}</strong>
+            <span class="game-card-arrow" aria-hidden="true">›</span>
           </button>
         `).join('')}
       </div>
 
       <div class="section-title">Igrači</div>
-      <div class="card row">
+      <div class="card row compact-card">
         <strong>${players.length} spremljenih</strong>
         <button class="btn compact" data-nav="players">Uredi</button>
       </div>
@@ -261,41 +291,50 @@
 
     const players = getPlayers();
     const rule = RULES[setupGame];
-    const selected = setupSelectedPlayers;
-    const canTeams = rule.teams && selected.length === 4;
-    const validBriskulaCount = setupGame !== 'briskula' || [2, 3, 4].includes(selected.length);
-    const canStart = selected.length >= 2 && validBriskulaCount && (!setupTeamMode || setupTeamA.length === 2);
+    const supportsTeamOnly = setupGame === 'treseta' || setupGame === 'briskula';
+    const mode = supportsTeamOnly ? setupPlayMode : 'individual';
+    const minPlayers = rule.minPlayers ?? 2;
+    const maxPlayers = rule.maxPlayers ?? Infinity;
+    const validPlayerCount = setupSelectedPlayers.length >= minPlayers && setupSelectedPlayers.length <= maxPlayers;
+    const teamNamesValid = setupTeamNames.a.trim() && setupTeamNames.b.trim() && setupTeamNames.a.trim().toLowerCase() !== setupTeamNames.b.trim().toLowerCase();
+    const canStart = mode === 'teams' ? Boolean(teamNamesValid) : mode === 'individual' ? validPlayerCount : false;
 
     app.innerHTML = shell(`
       ${topbar(rule.label, '', 'home')}
 
-      <div class="card">
-        <strong>Odaberi igrače</strong>
-        <div class="player-select" style="margin-top:14px">
-          ${players.map(p => `<button class="player-chip ${selected.includes(p.id) ? 'selected' : ''}" data-setup-player="${p.id}">${esc(p.name)}</button>`).join('')}
-        </div>
-        ${!players.length ? `<div class="empty" style="margin-top:12px">Prvo dodaj igrače.</div><button class="btn full" data-nav="players" style="margin-top:10px">Dodaj igrače</button>` : ''}
-      </div>
-
-      ${canTeams ? `
+      ${supportsTeamOnly ? `
         <div class="section-title">Način igre</div>
-        <div class="card">
-          <div class="action-row">
-            <button class="btn ${!setupTeamMode ? 'primary' : ''}" data-team-mode="0">Pojedinačno</button>
-            <button class="btn ${setupTeamMode ? 'primary' : ''}" data-team-mode="1">2 na 2</button>
-          </div>
+        <div class="mode-grid">
+          <button class="mode-card ${mode === 'individual' ? 'selected' : ''}" data-setup-mode="individual">
+            <strong>Pojedinačno</strong>
+          </button>
+          <button class="mode-card ${mode === 'teams' ? 'selected' : ''}" data-setup-mode="teams">
+            <strong>2 na 2</strong>
+          </button>
         </div>
       ` : ''}
 
-      ${setupTeamMode && canTeams ? `
-        <div class="section-title">Tim 1</div>
+      ${mode === 'teams' ? `
+        <div class="section-title">Timovi</div>
+        <div class="card team-name-card">
+          <label class="field">Prvi tim
+            <input class="input team-name-input" data-team-name="a" maxlength="28" placeholder="Ime tima" value="${esc(setupTeamNames.a)}" autocomplete="off" />
+          </label>
+          <label class="field">Drugi tim
+            <input class="input team-name-input" data-team-name="b" maxlength="28" placeholder="Ime tima" value="${esc(setupTeamNames.b)}" autocomplete="off" />
+          </label>
+        </div>
+      ` : mode === 'individual' ? `
+        <div class="section-title">Igrači</div>
         <div class="card">
           <div class="player-select">
-            ${selected.map(id => `<button class="player-chip ${setupTeamA.includes(id) ? 'selected' : ''}" data-team-a-player="${id}">${esc(pName(id))}</button>`).join('')}
+            ${players.map(p => `<button class="player-chip ${setupSelectedPlayers.includes(p.id) ? 'selected' : ''}" data-setup-player="${p.id}">${esc(p.name)}</button>`).join('')}
           </div>
-          ${setupTeamA.length === 2 ? `<div class="team-preview">Tim 2: ${selected.filter(id => !setupTeamA.includes(id)).map(pName).join(' + ')}</div>` : ''}
+          ${!players.length ? `<div class="empty">Nema spremljenih igrača.</div><button class="btn full" data-nav="players" style="margin-top:10px">Dodaj igrače</button>` : ''}
         </div>
-      ` : ''}
+      ` : `
+        <div class="setup-placeholder">Odaberi način igre.</div>
+      `}
 
       <div style="height:14px"></div>
       <button class="btn primary full" id="create-game" ${canStart ? '' : 'disabled'}>Započni partiju</button>
@@ -303,6 +342,22 @@
   }
 
   function createGame() {
+    const supportsTeamOnly = setupGame === 'treseta' || setupGame === 'briskula';
+    const teamOnly = supportsTeamOnly && setupPlayMode === 'teams';
+    if (supportsTeamOnly && !setupPlayMode) return toast('Odaberi način igre.');
+    if (teamOnly) {
+      const a = setupTeamNames.a.trim();
+      const b = setupTeamNames.b.trim();
+      if (!a || !b) return toast('Upiši oba imena tima.');
+      if (a.toLowerCase() === b.toLowerCase()) return toast('Timovi moraju imati različita imena.');
+    } else {
+      const minPlayers = RULES[setupGame]?.minPlayers ?? 2;
+      const maxPlayers = RULES[setupGame]?.maxPlayers ?? Infinity;
+      if (setupSelectedPlayers.length < minPlayers || setupSelectedPlayers.length > maxPlayers) {
+        return toast(`Odaberi ${minPlayers}${Number.isFinite(maxPlayers) ? `–${maxPlayers}` : '+'} igrača.`);
+      }
+    }
+
     if (getActive()) {
       return confirmAction(
         'Aktivna partija postoji',
@@ -312,16 +367,17 @@
       );
     }
 
-    const teams = setupTeamMode ? [
-      { id: uid(), name: 'Tim 1', playerIds: [...setupTeamA] },
-      { id: uid(), name: 'Tim 2', playerIds: setupSelectedPlayers.filter(id => !setupTeamA.includes(id)) }
+    const teams = teamOnly ? [
+      { id: uid(), name: setupTeamNames.a.trim(), playerIds: [] },
+      { id: uid(), name: setupTeamNames.b.trim(), playerIds: [] }
     ] : [];
 
     const game = {
       id: uid(),
       type: setupGame,
-      playerIds: [...setupSelectedPlayers],
-      teamMode: setupTeamMode,
+      playerIds: teamOnly ? [] : [...setupSelectedPlayers],
+      teamMode: teamOnly,
+      teamOnly,
       teams,
       rounds: [],
       draft: { scores: {}, autoAssignedId: null, events: [], winnerId: null },
@@ -331,6 +387,9 @@
     setActive(game);
     page = 'game';
     setupGame = null;
+    setupSelectedPlayers = [];
+    setupPlayMode = null;
+    setupTeamNames = { a: '', b: '' };
     render();
     toast('Partija započeta');
   }
@@ -359,32 +418,32 @@
     return game.type === 'kifameno' ? Math.min(10, remaining) : remaining;
   }
 
-  function setDraftScore(playerId, value) {
+  function setDraftScore(participantId, value) {
     const game = getActive();
     if (!game) return;
     const d = ensureDraft(game);
+    const participantIds = scoreParticipantIds(game);
+    if (!participantIds.includes(participantId)) return;
 
     if (game.type === 'kifameno' && Number(value) > 10) {
       return toast('U Kifamenu 11 znači Kapot.');
     }
 
-    if (d.autoAssignedId === playerId) {
+    if (d.autoAssignedId === participantId) {
       return toast('Ovaj rezultat je izračunat automatski.');
     }
 
-    if (d.autoAssignedId && d.autoAssignedId !== playerId) {
+    if (d.autoAssignedId && d.autoAssignedId !== participantId) {
       delete d.scores[d.autoAssignedId];
       d.autoAssignedId = null;
     }
 
-    d.scores[playerId] = Number(value);
+    d.scores[participantId] = Number(value);
 
-    const unset = game.playerIds.filter(id => !Object.prototype.hasOwnProperty.call(d.scores, id));
+    const unset = participantIds.filter(id => !Object.prototype.hasOwnProperty.call(d.scores, id));
     if (unset.length === 1) {
       const remain = RULES[game.type].basePoints - draftBaseSum(game);
 
-      // Zadnjeg igrača automatski popuni samo ako je rezultat dozvoljen.
-      // U Kifamenu 11 nije normalan rezultat runde nego Kapot.
       if (!(game.type === 'kifameno' && remain > 10)) {
         d.scores[unset[0]] = Math.max(0, remain);
         d.autoAssignedId = unset[0];
@@ -425,25 +484,56 @@
     renderGame();
   }
 
-  function scoreEntryHtml(game, pid) {
+  function scoreEntryHtml(game, participantId) {
     const d = ensureDraft(game);
-    const selected = Object.prototype.hasOwnProperty.call(d.scores, pid) ? d.scores[pid] : null;
-    const isAuto = d.autoAssignedId === pid;
-    const max = selectableMaxFor(game, pid);
+    const selected = Object.prototype.hasOwnProperty.call(d.scores, participantId) ? d.scores[participantId] : null;
+    const isAuto = d.autoAssignedId === participantId;
+    const max = selectableMaxFor(game, participantId);
     const buttons = Array.from({ length: max + 1 }, (_, i) => i)
-      .map(v => `<button class="score-btn ${selected === v ? 'selected' : ''} ${isAuto && selected === v ? 'auto' : ''}" data-score-player="${pid}" data-score-value="${v}" ${isAuto ? 'disabled' : ''}>${v}</button>`)
+      .map(v => `<button class="score-btn ${selected === v ? 'selected' : ''} ${isAuto && selected === v ? 'auto' : ''}" data-score-player="${participantId}" data-score-value="${v}" ${isAuto ? 'disabled' : ''}>${v}</button>`)
       .join('');
 
     return `<div class="score-player">
       <div class="score-header">
         <div>
-          <div class="score-name">${esc(pName(pid))}</div>
-          <div class="muted tiny">Ukupno ${playerTotal(game, pid)}</div>
+          <div class="score-name">${esc(scoreParticipantName(game, participantId))}</div>
+          <div class="muted tiny">Ukupno ${scoreParticipantTotal(game, participantId)}</div>
         </div>
         <div class="big-score">${selected ?? '–'}</div>
       </div>
       <div class="score-buttons">${buttons}</div>
     </div>`;
+  }
+
+  function remiScoreEntryHtml(game, pid) {
+    const d = ensureDraft(game);
+    const hasValue = Object.prototype.hasOwnProperty.call(d.scores, pid);
+    const value = hasValue ? Number(d.scores[pid]) : null;
+
+    return `<div class="score-player remi-player">
+      <div class="score-header">
+        <div>
+          <div class="score-name">${esc(pName(pid))}</div>
+          <div class="muted tiny">Ukupno ${playerTotal(game, pid)}</div>
+        </div>
+        <div class="big-score">${value ?? '–'}</div>
+      </div>
+      <div class="score-buttons remi-score-buttons">
+        ${REMI_SCORES.map(score => `<button class="score-btn ${value === score ? 'selected' : ''} ${score < 0 ? 'negative' : ''}" data-remi-score-player="${pid}" data-remi-score-value="${score}">${score}</button>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  function setRemiDraftScore(playerId, value) {
+    const game = getActive();
+    if (!game || game.type !== 'remi') return;
+    if (!game.playerIds.includes(playerId) || !isAllowedRemiScore(value)) return;
+
+    const d = ensureDraft(game);
+    d.scores[playerId] = Number(value);
+    setActive(game);
+    haptic();
+    renderGame();
   }
 
   function briskulaWinnerHtml(game) {
@@ -512,10 +602,11 @@
       }
 
       const isKapotRound = r.special === 'kapot' || (r.events || []).some(e => e.type === 'kapot');
+      const roundParticipants = scoreParticipantIds(game);
       return `<div class="history-round">
         <div class="row"><strong>Runda ${realIndex + 1}</strong><span class="muted tiny">${formatDate(r.createdAt)}</span></div>
-        ${isKapotRound ? '' : `<div class="history-grid">${game.playerIds.map(pid => `<span>${esc(pName(pid))}</span><strong>${Number(r.scores?.[pid] ?? 0)}</strong>`).join('')}</div>`}
-        ${(r.events || []).map(e => `<div class="history-event">${esc(e.label)} · ${e.points > 0 ? '+' : ''}${e.points}${e.playerId ? ` · ${esc(pName(e.playerId))}` : ''}</div>`).join('')}
+        ${isKapotRound ? '' : `<div class="history-grid">${roundParticipants.map(id => `<span>${esc(scoreParticipantName(game, id))}</span><strong>${Number(r.scores?.[id] ?? 0)}</strong>`).join('')}</div>`}
+        ${(r.events || []).map(e => `<div class="history-event">${esc(e.label)} · ${e.points > 0 ? '+' : ''}${e.points}${e.playerId ? ` · ${esc(pName(e.playerId))}` : e.teamId ? ` · ${esc(participantName(game, e.teamId))}` : ''}</div>`).join('')}
         <div class="action-row" style="margin-top:10px">
           ${isKapotRound ? '' : `<button class="btn" data-edit-round="${r.id}">Uredi</button>`}
           <button class="btn danger" data-delete-round="${r.id}">Obriši</button>
@@ -534,13 +625,19 @@
     const rule = RULES[game.type];
     const d = ensureDraft(game);
     const isBriskula = game.type === 'briskula';
+    const isRemi = game.type === 'remi';
     const remain = remainingPoints(game);
+    const roundParticipantIds = scoreParticipantIds(game);
 
-    const allSet = game.playerIds.every(id => Object.prototype.hasOwnProperty.call(d.scores, id));
-    const kifamenoScoresValid = game.type !== 'kifameno' || game.playerIds.every(id => Number(d.scores[id]) <= 10);
+    const allSet = roundParticipantIds.every(id => Object.prototype.hasOwnProperty.call(d.scores, id));
+    const allFinite = roundParticipantIds.every(id => Number.isFinite(Number(d.scores[id])));
+    const remiScoresValid = game.type !== 'remi' || roundParticipantIds.every(id => isAllowedRemiScore(d.scores[id]));
+    const kifamenoScoresValid = game.type !== 'kifameno' || roundParticipantIds.every(id => Number(d.scores[id]) <= 10);
     const validRound = isBriskula
       ? Boolean(d.winnerId)
-      : allSet && draftBaseSum(game) === rule.basePoints && kifamenoScoresValid;
+      : isRemi
+        ? allSet && allFinite && remiScoresValid
+        : allSet && draftBaseSum(game) === rule.basePoints && kifamenoScoresValid;
 
     app.innerHTML = shell(`
       ${topbar(rule.label, `Runda ${(game.rounds?.length || 0) + 1}`, 'home')}
@@ -549,12 +646,15 @@
       ${isBriskula ? `
         <div class="section-title">Pobjednik runde</div>
         ${briskulaWinnerHtml(game)}
+      ` : isRemi ? `
+        <div class="section-title">Bodovi runde</div>
+        <div>${roundParticipantIds.map(pid => remiScoreEntryHtml(game, pid)).join('')}</div>
       ` : `
         <div class="remaining ${remain === 0 ? 'ok' : ''}">
           <span>Preostalo</span>
           <strong>${remain} / ${rule.basePoints}</strong>
         </div>
-        <div>${game.playerIds.map(pid => scoreEntryHtml(game, pid)).join('')}</div>
+        <div>${roundParticipantIds.map(id => scoreEntryHtml(game, id)).join('')}</div>
 
         <div class="section-title">Dodaci</div>
         <div class="action-row">
@@ -584,6 +684,7 @@
     const game = getActive();
     if (!game) return;
     const d = ensureDraft(game);
+    const roundParticipantIds = scoreParticipantIds(game);
 
     if (game.type === 'briskula') {
       if (!d.winnerId) return toast('Odaberi pobjednika runde.');
@@ -594,16 +695,27 @@
         scores: {},
         events: []
       });
+    } else if (game.type === 'remi') {
+      const allSet = roundParticipantIds.every(id => Object.prototype.hasOwnProperty.call(d.scores, id));
+      const allFinite = roundParticipantIds.every(id => Number.isFinite(Number(d.scores[id])));
+      const allAllowed = roundParticipantIds.every(id => isAllowedRemiScore(d.scores[id]));
+      if (!allSet || !allFinite || !allAllowed) return toast('Odaberi bodove za sve igrače.');
+      game.rounds.push({
+        id: uid(),
+        createdAt: nowIso(),
+        scores: Object.fromEntries(roundParticipantIds.map(id => [id, Number(d.scores[id])])),
+        events: []
+      });
     } else {
       const rule = RULES[game.type];
-      const allSet = game.playerIds.every(id => Object.prototype.hasOwnProperty.call(d.scores, id));
-      const kifamenoScoresValid = game.type !== 'kifameno' || game.playerIds.every(id => Number(d.scores[id]) <= 10);
+      const allSet = roundParticipantIds.every(id => Object.prototype.hasOwnProperty.call(d.scores, id));
+      const kifamenoScoresValid = game.type !== 'kifameno' || roundParticipantIds.every(id => Number(d.scores[id]) <= 10);
       const valid = allSet && draftBaseSum(game) === rule.basePoints && kifamenoScoresValid;
       if (!valid) return toast(game.type === 'kifameno' ? 'Rasporedi 11 bodova tako da nitko nema više od 10. Za 11 koristi Kapot.' : 'Runda nije ispravno popunjena.');
       game.rounds.push({
         id: uid(),
         createdAt: nowIso(),
-        scores: { ...d.scores },
+        scores: Object.fromEntries(roundParticipantIds.map(id => [id, Number(d.scores[id])])),
         events: [...d.events]
       });
     }
@@ -627,19 +739,27 @@
     const game = getActive();
     if (!game) return;
 
+    const targets = game.teamOnly
+      ? (game.teams || []).map(t => ({ kind: 'team', id: t.id, name: t.name }))
+      : (game.playerIds || []).map(pid => ({ kind: 'player', id: pid, name: pName(pid) }));
+
     openModal(`
       <h2>Zvanje</h2>
-      <p>Odaberi igrača.</p>
+      <p>${game.teamOnly ? 'Odaberi tim.' : 'Odaberi igrača.'}</p>
       <div class="option-list">
-        ${game.playerIds.map(pid => `<button class="option" data-declaration-player="${pid}">${esc(pName(pid))}</button>`).join('')}
+        ${targets.map(t => `<button class="option" data-declaration-target="${t.kind}:${t.id}">${esc(t.name)}</button>`).join('')}
       </div>
       <button class="btn ghost full" data-modal-close="1" style="margin-top:10px">Odustani</button>
     `);
   }
 
-  function declarationChoice(playerId) {
+  function declarationChoice(kind, targetId) {
+    const game = getActive();
+    if (!game) return;
+    const targetName = kind === 'team' ? participantName(game, targetId) : pName(targetId);
+
     openModal(`
-      <h2>Zvanje · ${esc(pName(playerId))}</h2>
+      <h2>Zvanje · ${esc(targetName)}</h2>
       <label class="field">Naziv zvanja (opcionalno)
         <input class="input" id="declaration-label" maxlength="40" placeholder="Zvanje" />
       </label>
@@ -650,7 +770,7 @@
       <input type="hidden" id="declaration-points" value="3" />
       <div class="modal-actions">
         <button class="btn" data-modal-close="1">Odustani</button>
-        <button class="btn primary" id="save-declaration" data-player="${playerId}">Dodaj +3</button>
+        <button class="btn primary" id="save-declaration" data-kind="${kind}" data-target="${targetId}">Dodaj +3</button>
       </div>
     `);
 
@@ -910,10 +1030,19 @@
     if (start) {
       setupGame = start.dataset.startGame;
       setupSelectedPlayers = [];
-      setupTeamMode = false;
-      setupTeamA = [];
+      setupPlayMode = (setupGame === 'treseta' || setupGame === 'briskula') ? null : 'individual';
+      setupTeamNames = { a: '', b: '' };
       page = 'setup';
       render();
+      return;
+    }
+
+    const setupMode = e.target.closest('[data-setup-mode]');
+    if (setupMode) {
+      setupPlayMode = setupMode.dataset.setupMode;
+      setupSelectedPlayers = [];
+      setupTeamNames = { a: '', b: '' };
+      renderSetup();
       return;
     }
 
@@ -922,32 +1051,11 @@
       const id = setupP.dataset.setupPlayer;
       if (setupSelectedPlayers.includes(id)) {
         setupSelectedPlayers = setupSelectedPlayers.filter(x => x !== id);
-        setupTeamA = setupTeamA.filter(x => x !== id);
       } else {
-        if (setupGame === 'briskula' && setupSelectedPlayers.length >= 4) return toast('Briškula: najviše 4 igrača.');
+        const maxPlayers = RULES[setupGame]?.maxPlayers ?? Infinity;
+        if (setupSelectedPlayers.length >= maxPlayers) return toast(`${RULES[setupGame].label}: najviše ${maxPlayers} igrača.`);
         setupSelectedPlayers.push(id);
       }
-      if (setupSelectedPlayers.length !== 4) {
-        setupTeamMode = false;
-        setupTeamA = [];
-      }
-      renderSetup();
-      return;
-    }
-
-    const teamMode = e.target.closest('[data-team-mode]');
-    if (teamMode) {
-      setupTeamMode = teamMode.dataset.teamMode === '1';
-      setupTeamA = [];
-      renderSetup();
-      return;
-    }
-
-    const teamAP = e.target.closest('[data-team-a-player]');
-    if (teamAP) {
-      const id = teamAP.dataset.teamAPlayer;
-      if (setupTeamA.includes(id)) setupTeamA = setupTeamA.filter(x => x !== id);
-      else if (setupTeamA.length < 2) setupTeamA.push(id);
       renderSetup();
       return;
     }
@@ -957,13 +1065,19 @@
     const scoreBtn = e.target.closest('[data-score-player]');
     if (scoreBtn) return setDraftScore(scoreBtn.dataset.scorePlayer, Number(scoreBtn.dataset.scoreValue));
 
+    const remiScoreBtn = e.target.closest('[data-remi-score-player]');
+    if (remiScoreBtn) return setRemiDraftScore(remiScoreBtn.dataset.remiScorePlayer, Number(remiScoreBtn.dataset.remiScoreValue));
+
     const briskulaWinner = e.target.closest('[data-briskula-winner]');
     if (briskulaWinner) return selectBriskulaWinner(briskulaWinner.dataset.briskulaWinner);
 
     if (e.target.closest('#add-declaration')) return declarationModal();
 
-    const decPlayer = e.target.closest('[data-declaration-player]');
-    if (decPlayer) return declarationChoice(decPlayer.dataset.declarationPlayer);
+    const decTarget = e.target.closest('[data-declaration-target]');
+    if (decTarget) {
+      const [kind, id] = decTarget.dataset.declarationTarget.split(':');
+      return declarationChoice(kind, id);
+    }
 
     const decPoints = e.target.closest('[data-declaration-points]');
     if (decPoints) {
@@ -978,16 +1092,17 @@
 
     const saveDeclaration = e.target.closest('#save-declaration');
     if (saveDeclaration) {
-      const playerId = saveDeclaration.dataset.player;
+      const kind = saveDeclaration.dataset.kind;
+      const targetId = saveDeclaration.dataset.target;
       const points = Number(document.getElementById('declaration-points').value);
       const customLabel = document.getElementById('declaration-label').value.trim();
       if (!Number.isFinite(points) || points <= 0) return;
       closeModal();
       addDraftEvent({
         type: 'declaration',
-        playerId,
         points,
-        label: customLabel || 'Zvanje'
+        label: customLabel || 'Zvanje',
+        ...(kind === 'team' ? { teamId: targetId } : { playerId: targetId })
       });
       return;
     }
@@ -1095,6 +1210,19 @@
         render();
         toast('Podaci obrisani');
       }, 'Obriši sve');
+    }
+  });
+
+  document.addEventListener('input', (e) => {
+    const teamKey = e.target.dataset?.teamName;
+    if (!teamKey || !Object.prototype.hasOwnProperty.call(setupTeamNames, teamKey)) return;
+
+    setupTeamNames[teamKey] = e.target.value;
+    const createBtn = document.getElementById('create-game');
+    if (createBtn) {
+      const a = setupTeamNames.a.trim();
+      const b = setupTeamNames.b.trim();
+      createBtn.disabled = !(a && b && a.toLowerCase() !== b.toLowerCase());
     }
   });
 
