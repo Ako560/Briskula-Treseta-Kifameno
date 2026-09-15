@@ -19,7 +19,7 @@
   const isAllowedRemiScore = (value) => REMI_SCORES.includes(Number(value));
 
   const defaults = {
-    settings: { theme: 'dark', haptics: true, confirmations: true }
+    settings: { theme: 'light', haptics: true, confirmations: true }
   };
 
   let page = 'home';

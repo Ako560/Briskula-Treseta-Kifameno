@@ -1,4 +1,4 @@
-const CACHE = 'partija-runtime-v12';
+const CACHE = 'partija-runtime-v14';
 const APP_SHELL = [
   './',
   './index.html',
