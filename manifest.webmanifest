@@ -1,13 +1,13 @@
 {
-  "name": "Karte Score",
-  "short_name": "Karte",
-  "description": "Jednostavan scorekeeper za Briškulu, Trešetu, Kifameno i Remi.",
+  "name": "Partija",
+  "short_name": "Partija",
+  "description": "Scorekeeper za Trešetu, Briškulu, Kifameno i Remi.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#0e1110",
-  "theme_color": "#0e1110",
+  "background_color": "#07100c",
+  "theme_color": "#07100c",
   "lang": "hr",
   "icons": [
     { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },

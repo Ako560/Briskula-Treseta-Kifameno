@@ -62,7 +62,7 @@
   function applyTheme() {
     const settings = getSettings();
     document.documentElement.classList.toggle('light', settings.theme === 'light');
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', settings.theme === 'light' ? '#f5f5f5' : '#0c0f13');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', settings.theme === 'light' ? '#ede6d8' : '#07100c');
   }
 
   function haptic(ms = 20) {
@@ -210,55 +210,165 @@
     };
   }
 
+  function uiIcon(name, className = '') {
+    const icons = {
+      home: '<path d="M3 10.8 12 3l9 7.8v8.4a1.8 1.8 0 0 1-1.8 1.8h-4.8v-6.3H9.6V21H4.8A1.8 1.8 0 0 1 3 19.2z"/>',
+      users: '<path d="M16 20v-1.4c0-2.4-2.3-4.3-5.2-4.3s-5.2 1.9-5.2 4.3V20"/><circle cx="10.8" cy="8.2" r="3.2"/><path d="M16.3 14.7c1.8.6 3.1 2 3.1 3.8V20M15.5 5.7a3 3 0 0 1 0 5.4"/>',
+      history: '<path d="M4 5v5h5"/><path d="M5.2 16.7a8 8 0 1 0-1-8.8"/><path d="M12 7.5v5l3.3 2"/>',
+      settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V3h4v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1v4H21a1.7 1.7 0 0 0-1.6 1z"/>',
+      chevron: '<path d="m9 6 6 6-6 6"/>',
+      back: '<path d="m15 18-6-6 6-6"/>',
+      play: '<path d="m9 7 8 5-8 5z"/>',
+      cards: '<rect x="5" y="5" width="10" height="14" rx="2" transform="rotate(-8 10 12)"/><rect x="9" y="4" width="10" height="14" rx="2" transform="rotate(8 14 11)"/>'
+    };
+    return `<svg class="ui-icon ${esc(className)}" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${icons[name] || icons.cards}</svg>`;
+  }
+
+  function gameVisual(key) {
+    const visuals = {
+      treseta: `<svg viewBox="0 0 180 120" aria-hidden="true" class="game-art-svg">
+        <g fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="54" y="25" width="55" height="78" rx="7" transform="rotate(-12 81 64)" opacity=".42"/>
+          <rect x="75" y="20" width="55" height="78" rx="7" transform="rotate(2 103 59)" opacity=".64"/>
+          <rect x="96" y="27" width="55" height="78" rx="7" transform="rotate(13 124 66)" opacity=".88"/>
+          <path d="M107 48c0 10 5 16 14 16s14-6 14-16h-28Z"/><path d="M121 64v11m-8 7h16"/>
+          <path d="M84 43c0 7 4 12 10 12s10-5 10-12H84Z" opacity=".55"/><path d="M94 55v8" opacity=".55"/>
+        </g>
+      </svg>`,
+      briskula: `<svg viewBox="0 0 180 120" aria-hidden="true" class="game-art-svg">
+        <g fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="58" y="23" width="54" height="78" rx="7" transform="rotate(-10 85 62)" opacity=".45"/>
+          <rect x="86" y="22" width="54" height="78" rx="7" transform="rotate(10 113 61)" opacity=".78"/>
+          <path d="m78 76 39-38m-33 4 29 34M73 82l10-2-8-8m48 10-10-2 8-8"/>
+          <path d="M77 39 73 30l9 4Zm42 0 4-9-9 4Z"/>
+        </g>
+      </svg>`,
+      remi: `<svg viewBox="0 0 180 120" aria-hidden="true" class="game-art-svg">
+        <g fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="50" y="26" width="58" height="76" rx="7" transform="rotate(-15 79 64)" opacity=".42"/>
+          <rect x="72" y="21" width="58" height="76" rx="7" transform="rotate(-3 101 59)" opacity=".64"/>
+          <rect x="95" y="25" width="58" height="76" rx="7" transform="rotate(11 124 63)" opacity=".9"/>
+          <path d="m108 43 27 35m-22-39 27 35m-36-20 27 35" opacity=".55"/>
+          <path d="m106 75 20-25m-14 35 26-33" opacity=".55"/>
+        </g>
+      </svg>`,
+      kifameno: `<svg viewBox="0 0 180 120" aria-hidden="true" class="game-art-svg">
+        <g fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="68" y="23" width="55" height="78" rx="7" transform="rotate(-6 96 62)" opacity=".5"/>
+          <rect x="96" y="26" width="55" height="78" rx="7" transform="rotate(10 124 65)" opacity=".82"/>
+          <circle cx="93" cy="49" r="10"/><circle cx="111" cy="72" r="10"/><circle cx="130" cy="49" r="10"/>
+          <path d="M88 49h10m-5-5v10M106 72h10m-5-5v10M125 49h10m-5-5v10" opacity=".6"/>
+        </g>
+      </svg>`
+    };
+    return visuals[key] || visuals.treseta;
+  }
+
+  function initials(name) {
+    return String(name || '?').trim().split(/\s+/).slice(0, 2).map(part => part[0]?.toUpperCase() || '').join('') || '?';
+  }
+
+  function formatHomeDate(iso) {
+    if (!iso) return '';
+    return new Intl.DateTimeFormat('hr-HR', { day: '2-digit', month: '2-digit' }).format(new Date(iso));
+  }
+
   function shell(content, activeNav = page) {
     return `<div class="app-shell">
       ${content}
-      <nav class="bottom-nav">
-        <button class="nav-btn ${activeNav === 'home' ? 'active' : ''}" data-nav="home">Početna</button>
-        <button class="nav-btn ${activeNav === 'players' ? 'active' : ''}" data-nav="players">Igrači</button>
-        <button class="nav-btn ${activeNav === 'history' ? 'active' : ''}" data-nav="history">Povijest</button>
-        <button class="nav-btn ${activeNav === 'settings' ? 'active' : ''}" data-nav="settings">Postavke</button>
+      <nav class="bottom-nav" aria-label="Glavna navigacija">
+        <button class="nav-btn ${activeNav === 'home' ? 'active' : ''}" data-nav="home">${uiIcon('home')}<span>Početna</span></button>
+        <button class="nav-btn ${activeNav === 'players' ? 'active' : ''}" data-nav="players">${uiIcon('users')}<span>Igrači</span></button>
+        <button class="nav-btn ${activeNav === 'history' ? 'active' : ''}" data-nav="history">${uiIcon('history')}<span>Povijest</span></button>
+        <button class="nav-btn ${activeNav === 'settings' ? 'active' : ''}" data-nav="settings">${uiIcon('settings')}<span>Postavke</span></button>
       </nav>
     </div>`;
   }
 
   function topbar(title, meta = '', back = null) {
-    return `<div class="topbar">
-      <div class="row" style="justify-content:flex-start">
-        ${back ? `<button class="icon-btn" data-nav="${esc(back)}" aria-label="Natrag">←</button>` : ''}
-        <div class="brand-lockup">
-          ${!back ? `<span class="brand-mark" aria-hidden="true"><i></i><i></i></span>` : ''}
+    const isHomeBrand = !back && title === 'Partija';
+    if (isHomeBrand) {
+      return `<header class="topbar topbar-home">
+        <div class="partija-brand" aria-label="Partija">
+          <span class="brand-suit" aria-hidden="true">♣</span>
+          <div><div class="partija-title">PARTIJA</div>${meta ? `<div class="partija-subtitle">${esc(meta)}</div>` : ''}</div>
+          <span class="brand-suit" aria-hidden="true">♠</span>
+        </div>
+        <button class="icon-btn top-settings" data-nav="settings" aria-label="Postavke">${uiIcon('settings')}</button>
+      </header>`;
+    }
+
+    return `<header class="topbar topbar-page">
+      <div class="page-heading">
+        ${back ? `<button class="icon-btn" data-nav="${esc(back)}" aria-label="Natrag">${uiIcon('back')}</button>` : ''}
+        <div class="page-title-wrap">
+          <div class="page-eyebrow">PARTIJA</div>
           <div class="brand">${esc(title)}${meta ? `<small>${esc(meta)}</small>` : ''}</div>
         </div>
       </div>
-      ${getActive() && page !== 'game' ? `<button class="btn compact" data-nav="game">Partija</button>` : ''}
-    </div>`;
+      ${getActive() && page !== 'game' ? `<button class="btn compact active-party-btn" data-nav="game">${uiIcon('play')}<span>Partija</span></button>` : ''}
+    </header>`;
   }
 
   function renderHome() {
     const active = getActive();
     const players = getPlayers();
+    const recent = getHistory().slice(0, 4);
+
+    const playerFaces = players.slice(0, 5).map((p, i) => `<span class="mini-avatar avatar-${(i % 5) + 1}" title="${esc(p.name)}">${esc(initials(p.name))}</span>`).join('');
+
+    const recentHtml = recent.length ? recent.map(g => {
+      const board = g.finalBoard || scoreboard(g);
+      const winner = board?.[0];
+      const matchup = (board || []).slice(0, 3).map(x => `${esc(x.name)} <b>${x.score}</b>`).join('<span class="match-sep">·</span>');
+      return `<div class="recent-game-row">
+        <div class="recent-game-mark game-mark-${esc(g.type)}">${esc((RULES[g.type]?.label || '?').slice(0, 1))}</div>
+        <div class="recent-game-main">
+          <div class="recent-game-title">${matchup || esc(RULES[g.type]?.label || g.type)}</div>
+          <div class="recent-game-meta">${esc(RULES[g.type]?.label || g.type)}${winner ? ` · ${esc(winner.name)}` : ''}</div>
+        </div>
+        <div class="recent-game-date">${formatHomeDate(g.finishedAt || g.createdAt)}</div>
+      </div>`;
+    }).join('') : `<div class="home-empty">Završene partije pojavit će se ovdje.</div>`;
 
     app.innerHTML = shell(`
-      ${topbar('Karte Score')}
+      ${topbar('Partija', 'Dnevnik igara')}
 
-      ${active ? `<button class="btn primary full continue-btn" data-nav="game">Nastavi partiju</button>` : ''}
+      ${active ? `<button class="active-game-panel" data-nav="game">
+        <span class="active-game-icon">${uiIcon('play')}</span>
+        <span class="active-game-copy"><small>Aktivna partija</small><strong>${esc(RULES[active.type]?.label || active.type)}</strong></span>
+        <span class="active-game-round">Runda ${(active.rounds?.length || 0) + 1}</span>
+        ${uiIcon('chevron')}
+      </button>` : ''}
 
-      <div class="section-title">Nova partija</div>
-      <div class="game-grid">
+      <div class="home-section-head">
+        <div class="section-title">Nova partija</div>
+      </div>
+      <div class="game-grid premium-game-grid">
         ${Object.entries(RULES).map(([key, r]) => `
-          <button class="game-card" data-start-game="${key}">
-            <strong>${r.label}</strong>
-            <span class="game-card-arrow" aria-hidden="true">›</span>
+          <button class="game-card game-card-${key}" data-start-game="${key}" aria-label="Pokreni ${esc(r.label)}">
+            <div class="game-card-copy"><strong>${r.label}</strong></div>
+            <div class="game-card-art">${gameVisual(key)}</div>
+            <span class="game-card-arrow" aria-hidden="true">${uiIcon('chevron')}</span>
           </button>
         `).join('')}
       </div>
 
-      <div class="section-title">Igrači</div>
-      <div class="card row compact-card">
-        <strong>${players.length} spremljenih</strong>
-        <button class="btn compact" data-nav="players">Uredi</button>
+      <div class="home-section-head">
+        <div class="section-title">Moja družina</div>
+        <button class="text-link" data-nav="players">Uredi ${uiIcon('chevron')}</button>
       </div>
+      <button class="crew-card" data-nav="players">
+        <div class="avatar-stack">${playerFaces || `<span class="mini-avatar avatar-empty">+</span>`}</div>
+        <div class="crew-copy"><strong>${players.length ? `${players.length} spremljenih igrača` : 'Dodaj igrače'}</strong><span>${players.length ? players.slice(0, 4).map(p => esc(p.name)).join(' · ') : 'Spremi ekipu za brži početak partije'}</span></div>
+        ${uiIcon('chevron')}
+      </button>
+
+      <div class="home-section-head">
+        <div class="section-title">Posljednje partije</div>
+        <button class="text-link" data-nav="history">Vidi sve ${uiIcon('chevron')}</button>
+      </div>
+      <div class="recent-games-card">${recentHtml}</div>
     `, 'home');
   }
 

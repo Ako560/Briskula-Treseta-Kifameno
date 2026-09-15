@@ -1,20 +1,38 @@
-# Karte Score v8
+# PARTIJA
 
-Mobilna PWA aplikacija za praćenje rezultata u Trešeti, Briškuli, Kifamenu i Remiju.
+Mobilni PWA scorekeeper za Trešetu, Briškulu, Kifameno i Remi.
 
-## Što je novo u v8
+## Objavljivanje na GitHub Pages
 
-- Trešeta i Briškula imaju jasan izbor `Pojedinačno` ili `2 na 2`.
-- Kod `2 na 2` više se ne biraju četiri igrača. Upišu se samo dva imena timova.
-- Trešeta 2 na 2 vodi svih 11 bodova direktno po timu.
-- Zvanja i ručni bodovi u timskoj Trešeti dodjeljuju se direktno timu.
-- Briškula 2 na 2 po rundi traži samo pobjednički tim.
-- Pojedinačne partije i dalje koriste spremljene igrače.
-- Redizajniran je UI u jednostavniji i ozbiljniji stil, bez emojija i nepotrebnih opisa.
-- Postojeće lokalno spremljene partije i povijest ostaju kompatibilne.
+1. U GitHub repozitorij uploadaj sadržaj ovog foldera tako da `index.html` bude u rootu.
+2. Otvori **Settings → Pages**.
+3. Pod **Build and deployment** odaberi **Deploy from a branch**.
+4. Branch: `main`, folder: `/(root)`.
+5. Klikni **Save**.
 
-## GitHub Pages update
+Nakon deploya GitHub će prikazati URL aplikacije.
 
-Zamijeni datoteke u repozitoriju i napravi commit. Service Worker koristi cache `v8`, pa se postojeća Home Screen instalacija ne mora ponovno dodavati.
+## Instalacija na mobitel
 
-Preporuka nakon deploya: potpuno zatvori aplikaciju i ponovno je otvori jednom kako bi nova verzija odmah sjela.
+### Android
+Otvori GitHub Pages link u Chromeu i odaberi **Install app** / **Add to Home screen**.
+
+### iPhone
+Otvori link u Safariju → Share → **Add to Home Screen**.
+
+Aplikaciju je potrebno dodati na Home Screen samo jednom. Nove verzije se povlače preko service workera nakon GitHub deploya.
+
+## Podaci
+
+Postojeći storage ključevi iz ranijih verzija nisu promijenjeni, zato update dizajna ne bi trebao obrisati spremljene igrače, aktivnu partiju ni povijest.
+
+## Pravila koja su trenutno implementirana
+
+- Trešeta: pojedinačno ili 2 na 2; 11 bodova po normalnoj rundi; zvanja i ručni bodovi.
+- Briškula: 2–4 igrača ili 2 na 2; po rundi se bira pobjednik.
+- Kifameno: 0–10 po igraču u normalnoj rundi; Kapot odmah završava rundu i igraču daje -11.
+- Remi: rezultati po igraču su -2, -1 ili 1–20.
+
+## Dizajn
+
+Verzija v9 prebacuje aplikaciju na novi identitet **Partija**: tamna kartaška podloga, zlatni detalji i vlastite vektorske ilustracije za svaku igru. Nema vanjskih slika ni CDN ovisnosti, pa PWA radi offline nakon prvog učitavanja.
