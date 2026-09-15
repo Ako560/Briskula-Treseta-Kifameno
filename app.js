@@ -224,44 +224,29 @@
     return `<svg class="ui-icon ${esc(className)}" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${icons[name] || icons.cards}</svg>`;
   }
 
-  function gameVisual(key) {
-    const visuals = {
-      treseta: `<svg viewBox="0 0 180 120" aria-hidden="true" class="game-art-svg">
-        <g fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="54" y="25" width="55" height="78" rx="7" transform="rotate(-12 81 64)" opacity=".42"/>
-          <rect x="75" y="20" width="55" height="78" rx="7" transform="rotate(2 103 59)" opacity=".64"/>
-          <rect x="96" y="27" width="55" height="78" rx="7" transform="rotate(13 124 66)" opacity=".88"/>
-          <path d="M107 48c0 10 5 16 14 16s14-6 14-16h-28Z"/><path d="M121 64v11m-8 7h16"/>
-          <path d="M84 43c0 7 4 12 10 12s10-5 10-12H84Z" opacity=".55"/><path d="M94 55v8" opacity=".55"/>
-        </g>
-      </svg>`,
-      briskula: `<svg viewBox="0 0 180 120" aria-hidden="true" class="game-art-svg">
-        <g fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="58" y="23" width="54" height="78" rx="7" transform="rotate(-10 85 62)" opacity=".45"/>
-          <rect x="86" y="22" width="54" height="78" rx="7" transform="rotate(10 113 61)" opacity=".78"/>
-          <path d="m78 76 39-38m-33 4 29 34M73 82l10-2-8-8m48 10-10-2 8-8"/>
-          <path d="M77 39 73 30l9 4Zm42 0 4-9-9 4Z"/>
-        </g>
-      </svg>`,
-      remi: `<svg viewBox="0 0 180 120" aria-hidden="true" class="game-art-svg">
-        <g fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="50" y="26" width="58" height="76" rx="7" transform="rotate(-15 79 64)" opacity=".42"/>
-          <rect x="72" y="21" width="58" height="76" rx="7" transform="rotate(-3 101 59)" opacity=".64"/>
-          <rect x="95" y="25" width="58" height="76" rx="7" transform="rotate(11 124 63)" opacity=".9"/>
-          <path d="m108 43 27 35m-22-39 27 35m-36-20 27 35" opacity=".55"/>
-          <path d="m106 75 20-25m-14 35 26-33" opacity=".55"/>
-        </g>
-      </svg>`,
-      kifameno: `<svg viewBox="0 0 180 120" aria-hidden="true" class="game-art-svg">
-        <g fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="68" y="23" width="55" height="78" rx="7" transform="rotate(-6 96 62)" opacity=".5"/>
-          <rect x="96" y="26" width="55" height="78" rx="7" transform="rotate(10 124 65)" opacity=".82"/>
-          <circle cx="93" cy="49" r="10"/><circle cx="111" cy="72" r="10"/><circle cx="130" cy="49" r="10"/>
-          <path d="M88 49h10m-5-5v10M106 72h10m-5-5v10M125 49h10m-5-5v10" opacity=".6"/>
-        </g>
-      </svg>`
+  function gameMeta(key) {
+    const meta = {
+      treseta: { rule: '11 poena', note: 'Pojedinačno · 2 na 2' },
+      briskula: { rule: 'Pobjednik runde', note: '2, 3 ili 4 igrača' },
+      remi: { rule: '−2, −1, 1–20', note: '2 do 6 igrača' },
+      kifameno: { rule: 'Kapot −11', note: '0 do 10 po rundi' }
     };
-    return visuals[key] || visuals.treseta;
+    return meta[key] || { rule: '', note: '' };
+  }
+
+  function gameVisual(key) {
+    const symbols = {
+      treseta: ['♣', '●', '✦'],
+      briskula: ['♠', '⚔', '◆'],
+      remi: ['♦', '●', '◇'],
+      kifameno: ['♥', '◉', '◌']
+    };
+    const [main, second, third] = symbols[key] || symbols.treseta;
+    return `<div class="game-motif motif-${esc(key)}" aria-hidden="true">
+      <span class="motif-main">${main}</span>
+      <span class="motif-second">${second}</span>
+      <span class="motif-third">${third}</span>
+    </div>`;
   }
 
   function initials(name) {
@@ -345,13 +330,19 @@
         <div class="section-title">Nova partija</div>
       </div>
       <div class="game-grid premium-game-grid">
-        ${Object.entries(RULES).map(([key, r]) => `
+        ${Object.entries(RULES).map(([key, r]) => {
+          const meta = gameMeta(key);
+          return `
           <button class="game-card game-card-${key}" data-start-game="${key}" aria-label="Pokreni ${esc(r.label)}">
-            <div class="game-card-copy"><strong>${r.label}</strong></div>
+            <div class="game-card-copy">
+              <span class="game-card-rule">${esc(meta.rule)}</span>
+              <strong>${r.label}</strong>
+              <span class="game-card-note">${esc(meta.note)}</span>
+            </div>
             <div class="game-card-art">${gameVisual(key)}</div>
             <span class="game-card-arrow" aria-hidden="true">${uiIcon('chevron')}</span>
-          </button>
-        `).join('')}
+          </button>`;
+        }).join('')}
       </div>
 
       <div class="home-section-head">
